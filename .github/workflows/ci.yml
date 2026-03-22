@@ -87,9 +87,10 @@ jobs:
     - name: Build
       shell: msys2 {0}
       run: |
+        export PATH="/mingw64/bin:$PATH"
         mkdir -p build && cd build
         cmake -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Release ..
-        mingw32-make -j8
+        make -j8
 
     - name: Run Tests
       shell: msys2 {0}

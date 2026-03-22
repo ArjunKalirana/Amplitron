@@ -102,10 +102,10 @@ jobs:
     - name: Build
       shell: msys2 {0}
       run: |
-        mkdir -p build
-        cd build
+        export PATH="/mingw64/bin:$PATH"
+        mkdir -p build && cd build
         cmake -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Release ..
-        mingw32-make -j8
+        make -j8
 
     - name: Package
       shell: msys2 {0}
