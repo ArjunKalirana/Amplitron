@@ -291,6 +291,10 @@ jobs:
     - name: Rename APK
       run: |
         APK=$(find artifacts/android -name "*.apk" | head -1)
+        if [ -z "$APK" ]; then
+          echo "Error: No APK found in artifacts/android"
+          exit 1
+        fi
         cp "$APK" Amplitron-Android.apk
         ls -lh Amplitron-Android.apk
 

@@ -124,7 +124,11 @@ static float extract_float_value(const std::string& json, const std::string& key
     if (pos == std::string::npos) return 0.0f;
     ++pos;
     while (pos < json.size() && (json[pos] == ' ' || json[pos] == '\t')) ++pos;
-    return std::stof(json.substr(pos));
+    try {
+        return std::stof(json.substr(pos));
+    } catch (...) {
+        return 0.0f;
+    }
 }
 
 static bool extract_bool_value(const std::string& json, const std::string& key) {

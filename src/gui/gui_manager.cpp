@@ -175,10 +175,9 @@ bool GuiManager::initialize(int width, int height) {
     ImGui_ImplSDL2_InitForOpenGL(window_, gl_context_);
     ImGui_ImplOpenGL3_Init(GLSetup::GLSL_VERSION);
 
-    pedal_board_ = std::make_unique<PedalBoard>(engine_, command_history_);
+    pedal_board_ = std::make_unique<PedalBoard>(engine_, command_history_, &gui_midi_);
     gui_presets_.set_pedal_board(pedal_board_.get());
     gui_snapshots_.set_pedal_board(pedal_board_.get());
-    pedal_board_->set_gui_midi(&gui_midi_);
 
     PresetManager::load_config();
 

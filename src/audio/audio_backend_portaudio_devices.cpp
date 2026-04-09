@@ -87,7 +87,10 @@ bool AudioEngine::set_input_device(int device_index) {
             last_error_ = "Failed to start with new input device. Reverting.";
             std::cerr << "[Amplitron] " << last_error_ << std::endl;
             input_device_ = prev_device;
-            start();
+            if (!start()) {
+                last_error_ = "Failed to revert to previous input device. Engine stopped.";
+                std::cerr << "[Amplitron] " << last_error_ << std::endl;
+            }
             return false;
         }
         last_error_.clear();
@@ -120,7 +123,10 @@ bool AudioEngine::set_output_device(int device_index) {
             last_error_ = "Failed to start with new output device. Reverting.";
             std::cerr << "[Amplitron] " << last_error_ << std::endl;
             output_device_ = prev_device;
-            start();
+            if (!start()) {
+                last_error_ = "Failed to revert to previous output device. Engine stopped.";
+                std::cerr << "[Amplitron] " << last_error_ << std::endl;
+            }
             return false;
         }
         last_error_.clear();

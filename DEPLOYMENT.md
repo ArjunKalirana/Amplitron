@@ -145,7 +145,7 @@ Built with Gradle + Android NDK r27. The CI produces an unsigned release APK whi
 ### iOS (`Amplitron-iOS.ipa`)
 
 Built with CMake → Xcode for the iOS Simulator target (arm64, no code signing). The CI packages the `.app` bundle into an IPA using the standard Payload zip format:
-```
+```text
 Amplitron.ipa
 └── Payload/
     └── Amplitron.app/

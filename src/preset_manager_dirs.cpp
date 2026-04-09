@@ -165,7 +165,11 @@ std::string PresetManager::get_presets_dir() {
 
     std::string user_dir = get_user_presets_dir();
     if (!user_dir.empty()) {
-        std::filesystem::create_directories(user_dir);
+        try {
+            std::filesystem::create_directories(user_dir);
+        } catch (...) {
+            // Fall through to local fallback if creation fails
+        }
         if (dir_exists(user_dir)) {
             return user_dir;
         }

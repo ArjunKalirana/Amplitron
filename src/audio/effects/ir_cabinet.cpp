@@ -88,6 +88,14 @@ void IRCabinet::check_pending_kernel() {
         conv_engine_.set_kernel(
             std::shared_ptr<const ConvolutionKernel>(pending));
     }
+
+    // Handle deferred block-size-triggered kernel rebuild
+    // (avoids allocation in the real-time callback loop)
+    int new_block_size = pending_block_size_.exchange(0);
+    if (new_block_size > 0 && new_block_size != expected_block_size_ &&
+        !raw_ir_samples_.empty()) {
+        build_kernel(new_block_size);
+    }
 }
 
 void IRCabinet::set_sample_rate(int sample_rate) {
@@ -104,19 +112,18 @@ void IRCabinet::reset() {
 }
 
 void IRCabinet::process(float* buffer, int num_samples) {
-    // Check for new kernel from GUI thread
+    // Check for new kernel from GUI thread and deferred rebuilds
     check_pending_kernel();
 
     if (!conv_engine_.has_kernel()) return;  // passthrough when no IR loaded
 
-    // If block size changed, rebuild kernel for next time and use direct fallback now
+    // If block size changed, defer kernel rebuild to avoid allocation in callback
     if (num_samples != expected_block_size_ && num_samples > 0 &&
         !raw_ir_samples_.empty()) {
         // The convolution engine's process() will fall back to direct convolution
-        // when num_samples != block_size. Rebuild kernel for future calls.
-        // Note: build_kernel() allocates, but this only happens on block size change
-        // (rare event), not every callback.
-        build_kernel(num_samples);
+        // when num_samples != block_size. Request kernel rebuild for next process call.
+        // By deferring via pending_block_size_, we avoid allocations in the real-time callback.
+        pending_block_size_.store(num_samples, std::memory_order_release);
     }
 
     float level = params_[0].value;

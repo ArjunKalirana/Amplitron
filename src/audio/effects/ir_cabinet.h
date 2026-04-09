@@ -53,6 +53,10 @@ private:
     // Expected block size for the current kernel
     int expected_block_size_ = 0;
 
+    // Pending block size when audio callback detects a mismatch
+    // (deferred rebuild happens on next check_pending_kernel call)
+    std::atomic<int> pending_block_size_{0};
+
     // Max IR length: 500ms worth of samples at current sample rate
     int max_ir_samples() const;
 

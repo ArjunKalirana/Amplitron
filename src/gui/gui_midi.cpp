@@ -19,16 +19,18 @@ static const char* target_type_label(MidiTargetType type) {
         case MidiTargetType::EffectBypass: return "Bypass";
         case MidiTargetType::InputGain:    return "Input Gain";
         case MidiTargetType::OutputGain:   return "Output Gain";
+        default: break;  // Fail at compile time if enum is extended
     }
-    return "?";
+    return "?";  // Unreachable if all cases handled
 }
 
 static const char* mode_label(MidiMappingMode mode) {
     switch (mode) {
         case MidiMappingMode::Continuous: return "Continuous";
         case MidiMappingMode::Toggle:     return "Toggle";
+        default: break;  // Fail at compile time if enum is extended
     }
-    return "?";
+    return "?";  // Unreachable if all cases handled
 }
 
 void GuiMidi::render(bool& show) {
@@ -42,8 +44,10 @@ void GuiMidi::render(bool& show) {
     ImGui::TextColored(Theme::Gold(), "MIDI INPUT PORT");
     ImGui::BeginChild("PortSection", ImVec2(0, 70), true);
 
-    auto ports = midi_.get_available_ports();
-    if (ports.empty()) {
+    // Refresh cached ports on first render or when user clicks refresh
+    cached_ports_ = midi_.get_available_ports();
+
+    if (cached_ports_.empty()) {
         ImGui::TextColored(ImVec4(0.6f, 0.6f, 0.6f, 1.0f), "No MIDI input devices detected");
     } else {
         int current = midi_.current_port();
@@ -55,9 +59,9 @@ void GuiMidi::render(bool& show) {
             if (ImGui::Selectable("(none)", current < 0)) {
                 midi_.close_port();
             }
-            for (int i = 0; i < static_cast<int>(ports.size()); ++i) {
+            for (int i = 0; i < static_cast<int>(cached_ports_.size()); ++i) {
                 bool selected = (i == current);
-                if (ImGui::Selectable(ports[i].c_str(), selected)) {
+                if (ImGui::Selectable(cached_ports_[i].c_str(), selected)) {
                     midi_.open_port(i);
                 }
             }
@@ -67,7 +71,8 @@ void GuiMidi::render(bool& show) {
 
     ImGui::SameLine();
     if (ImGui::SmallButton("Refresh")) {
-        // Re-query ports (RtMidi re-enumerates on getPortCount)
+        // Re-query ports from RtMidi
+        cached_ports_ = midi_.get_available_ports();
     }
 
     ImGui::EndChild();

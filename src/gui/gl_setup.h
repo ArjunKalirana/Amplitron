@@ -9,6 +9,10 @@
 
 #include <SDL.h>
 
+#ifdef __APPLE__
+#include <TargetConditionals.h>
+#endif
+
 // OpenGL ES 3.0 on Web (Emscripten), Android, and iOS.
 // Desktop (Windows / macOS / Linux) uses OpenGL Core 3.3.
 #if defined(__EMSCRIPTEN__) || defined(__ANDROID__)

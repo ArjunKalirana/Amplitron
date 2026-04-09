@@ -48,6 +48,7 @@ public:
 
 private:
     MidiManager& midi_;
+    std::vector<std::string> cached_ports_;
 };
 
 #endif // AMPLITRON_NO_MIDI

@@ -11,8 +11,8 @@
 namespace Amplitron {
 
 /** @brief Construct PedalBoard and build initial widget list from engine state. */
-PedalBoard::PedalBoard(AudioEngine& engine, CommandHistory& history)
-    : engine_(engine), history_(history) {
+PedalBoard::PedalBoard(AudioEngine& engine, CommandHistory& history, GuiMidi* gui_midi)
+    : engine_(engine), history_(history), gui_midi_(gui_midi) {
     rebuild_widgets();
 }
 

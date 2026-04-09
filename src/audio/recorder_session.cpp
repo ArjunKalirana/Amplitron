@@ -91,7 +91,7 @@ void Recorder::resume() {
     if (!recording_ || !paused_) return;
     auto now = std::chrono::steady_clock::now();
     float elapsed = std::chrono::duration<float>(now - pause_start_).count();
-    pause_duration_.store(pause_duration_.load() + elapsed);
+    pause_duration_ += elapsed;
     paused_ = false;
 }
 
@@ -106,6 +106,13 @@ bool Recorder::save_to(const std::string& dest_path) {
     std::ofstream dst(dest_path, std::ios::binary);
     if (!src.is_open() || !dst.is_open()) return false;
     dst << src.rdbuf();
+    // Check for errors during copy
+    if (!dst.good() || !src.good()) {
+        std::cerr << "Recorder: failed to copy recording to " << dest_path << std::endl;
+        src.close();
+        dst.close();
+        return false;
+    }
     src.close();
     dst.close();
     // Remove temp file

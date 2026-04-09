@@ -23,8 +23,9 @@ public:
      * @brief Construct the pedal board.
      * @param engine  Reference to the audio engine that owns the effect chain.
      * @param history Reference to the shared command history for undo/redo.
+     * @param gui_midi Optional GuiMidi pointer for MIDI learn on initial widgets.
      */
-    PedalBoard(AudioEngine& engine, CommandHistory& history);
+    PedalBoard(AudioEngine& engine, CommandHistory& history, GuiMidi* gui_midi = nullptr);
 
     /** @brief Destructor. */
     ~PedalBoard();

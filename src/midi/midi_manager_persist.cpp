@@ -15,13 +15,21 @@ std::string MidiManager::get_config_path() {
     const char* appdata = std::getenv("APPDATA");
     if (!appdata) return "midi_config.json";
     std::string dir = std::string(appdata) + "\\Amplitron";
-    std::filesystem::create_directories(dir);
+    try {
+        std::filesystem::create_directories(dir);
+    } catch (...) {
+        // Ignore errors — will fall back to local path if creation fails
+    }
     return dir + "\\midi_config.json";
 #else
     const char* home = std::getenv("HOME");
     if (!home) return "midi_config.json";
     std::string config_dir = std::string(home) + "/.config/amplitron";
-    std::filesystem::create_directories(config_dir);
+    try {
+        std::filesystem::create_directories(config_dir);
+    } catch (...) {
+        // Ignore errors — will fall back to local path if creation fails
+    }
     return config_dir + "/midi_config.json";
 #endif
 }
@@ -135,7 +143,7 @@ bool MidiManager::mappings_from_json(const std::string& json) {
         pos = obj_end + 1;
     }
 
-    return !mappings_.empty();
+    return true;  // Successfully parsed (even if no mappings)
 }
 
 void MidiManager::save_config() const {

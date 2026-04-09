@@ -72,11 +72,11 @@ WavData load_wav_file(const std::string& filepath,
     size_t num_frames = static_cast<size_t>(frames_read);
     result.samples.resize(num_frames);
 
-    if (wav.channels == 1) {
+    if (result.channels == 1) {
         result.samples.assign(interleaved.begin(),
                               interleaved.begin() + static_cast<ptrdiff_t>(num_frames));
     } else {
-        int ch = static_cast<int>(wav.channels);
+        int ch = result.channels;
         for (size_t f = 0; f < num_frames; ++f) {
             float sum = 0.0f;
             for (int c = 0; c < ch; ++c)

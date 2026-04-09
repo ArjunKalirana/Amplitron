@@ -7,6 +7,19 @@
 
 namespace Amplitron {
 
+static void escape_json_string(std::ostream& os, const std::string& s) {
+    for (char c : s) {
+        switch (c) {
+            case '\\': os << "\\\\"; break;
+            case '"': os << "\\\""; break;
+            case '\n': os << "\\n"; break;
+            case '\r': os << "\\r"; break;
+            case '\t': os << "\\t"; break;
+            default: os << c; break;
+        }
+    }
+}
+
 void Recorder::write_wav_header() {
     // Write a placeholder WAV header (44 bytes)
     // Will be finalized when recording stops
@@ -47,7 +60,11 @@ void Recorder::finalize_wav_header() {
     if (!file_.is_open()) return;
 
     int64_t total_samples = samples_written_.load();
-    int data_size = static_cast<int>(total_samples * channels_ * 2);
+    // Compute data size in 64-bit to avoid overflow
+    int64_t data_size_64 = total_samples * static_cast<int64_t>(channels_) * 2;
+    // WAV format uses 32-bit sizes; clamp to max int32
+    int data_size = static_cast<int>(
+        (data_size_64 > 0x7FFFFFFF) ? 0x7FFFFFFF : data_size_64);
     int riff_size = data_size + 36;
 
     // Seek back and write correct sizes
@@ -91,7 +108,9 @@ void Recorder::write_metadata(const std::string& wav_path, AudioEngine& engine) 
 
     meta << "{\n";
     meta << "  \"recording\": {\n";
-    meta << "    \"filename\": \"" << wav_path << "\",\n";
+    meta << "    \"filename\": \"";
+    escape_json_string(meta, wav_path);
+    meta << "\",\n";
     meta << "    \"recorded_at\": \"" << timebuf << "\",\n";
     meta << "    \"duration_seconds\": " << duration << ",\n";
     meta << "    \"total_samples\": " << samples_written_.load() << ",\n";
@@ -102,8 +121,12 @@ void Recorder::write_metadata(const std::string& wav_path, AudioEngine& engine) 
     meta << "  },\n";
 
     meta << "  \"audio_settings\": {\n";
-    meta << "    \"input_device\": \"" << engine.get_input_device_name() << "\",\n";
-    meta << "    \"output_device\": \"" << engine.get_output_device_name() << "\",\n";
+    meta << "    \"input_device\": \"";
+    escape_json_string(meta, engine.get_input_device_name());
+    meta << "\",\n";
+    meta << "    \"output_device\": \"";
+    escape_json_string(meta, engine.get_output_device_name());
+    meta << "\",\n";
     meta << "    \"engine_sample_rate\": " << engine.get_sample_rate() << ",\n";
     meta << "    \"buffer_size\": " << engine.get_buffer_size() << ",\n";
     meta << "    \"input_gain\": " << engine.get_input_gain() << ",\n";

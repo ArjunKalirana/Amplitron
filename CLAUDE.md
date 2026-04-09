@@ -55,8 +55,8 @@ The WAV recording agent.
 
 ### 1.9 The MIDI Manager Agent (`midi_manager.h/.cpp`, `gui_midi.h/.cpp`)
 The MIDI CC mapping and learn agent.
-* **Role:** Receives MIDI Control Change messages from hardware controllers via RtMidi and routes them to effect parameters, bypass toggles, or master gains through the existing lock-free SPSC command queue.
-* **Responsibilities:** Opening/closing MIDI input ports; maintaining a table of CC-to-parameter mappings (identified by effect name + param name for reorder stability); providing a MIDI Learn mode where the next incoming CC is automatically bound to a user-selected knob; polling a lock-free SPSC queue each GUI frame to drain MIDI events without blocking the audio thread; persisting mappings to `midi_config.json`; and rendering a settings window (port selector, mapping table) plus right-click "MIDI Learn" menu items on every pedal knob.
+* **Role:** Receives MIDI Control Change messages from hardware controllers via RtMidi (callback thread) and routes them to effect parameters, bypass toggles, or master gains via the GUI/main thread.
+* **Responsibilities:** Opening/closing MIDI input ports; maintaining a table of CC-to-parameter mappings (identified by effect name + param name for reorder stability); receiving CC events from RtMidi callbacks and pushing them into a lock-free SPSC queue (`midi_queue_`); providing a MIDI Learn mode where the next incoming CC is automatically bound to a user-selected knob; polling and draining the MIDI queue each GUI frame (via `poll()`) to process events and apply parameter changes; persisting mappings to `midi_config.json`; and rendering a settings window (port selector, mapping table) plus right-click "MIDI Learn" menu items on every pedal knob.
 
 ---
 
@@ -102,6 +102,7 @@ Each effect pedal in Amplitron acts as an independent DSP processing agent. They
 Because the UI Agent and the DSP Agents operate on entirely different threads (with vastly different priority levels), they must communicate carefully to avoid "Dropouts" (audio clicking/stuttering).
 
 * **The `try_lock` + Shadow-Chain Paradigm:** The Audio Engine maintains an audio-thread-private shadow copy of the effect chain (`audio_shadow_effects_` / `audio_shadow_tuner_`). Each callback it attempts a non-blocking `try_lock` on `effect_mutex_`. If acquired it drains the SPSC command queue (applying pending parameter updates) and refreshes the shadow from `effects_`. If contended (GUI is mid-structural-mutation), it falls through and processes with the previous shadow — at most one callback behind, which is imperceptible. This eliminates the dry-pass glitch that previously occurred when skipping effect processing entirely on a failed `try_lock`.
+* **MIDI Callback → GUI Handoff:** The MIDI Manager maintains a lock-free SPSC queue (`midi_queue_`) between the RtMidi callback thread (producer) and the GUI thread (consumer). RtMidi callbacks push `MidiEvent` objects into the queue without blocking. The GUI thread drains the queue each frame via `MidiManager::poll(AudioEngine&)`, which routes CC values to effect parameters, bypass toggles, or master gains through the existing `engine.push_param_change()` path. Mappings are persisted to `midi_config.json` so they survive session restarts.
 * **Parameter Smoothing:** DSP Agents utilize one-pole filters internally on their parameter inputs. If the UI Agent jumps a parameter from `0.1` to `0.9` instantly, the DSP Agent interpolates the value over several samples to prevent audible "zipper" noise or clicking.
 
 ---

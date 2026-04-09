@@ -4,6 +4,7 @@
 #include "gui/command.h"
 
 #include <imgui.h>
+#include <cstdio>
 #include <cstring>
 #include <set>
 #include <vector>
@@ -44,6 +45,7 @@ void PedalBoard::render_signal_chain() {
 
     float pedal_x = origin.x + 20;
     int remove_idx = -1;
+    bool needs_rebuild = false;
 
     for (int vi = 0; vi < static_cast<int>(visible.size()); ++vi) {
         int i = visible[vi];
@@ -67,7 +69,7 @@ void PedalBoard::render_signal_chain() {
                     int source_idx = *static_cast<const int*>(payload->Data);
                     if (source_idx != i) {
                         history_.execute(std::make_unique<ReorderEffectCommand>(engine_, source_idx, i));
-                        rebuild_widgets();
+                        needs_rebuild = true;
                     }
                 }
                 ImGui::EndDragDropTarget();
@@ -93,6 +95,10 @@ void PedalBoard::render_signal_chain() {
     if (remove_idx >= 0) {
         visible_indices_.erase(remove_idx);
         history_.execute(std::make_unique<RemoveEffectCommand>(engine_, remove_idx));
+        needs_rebuild = true;
+    }
+
+    if (needs_rebuild) {
         rebuild_widgets();
     }
 
