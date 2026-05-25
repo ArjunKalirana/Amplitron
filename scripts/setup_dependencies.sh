@@ -104,7 +104,7 @@ install_deps() {
     fi
 }
 
-if [ "$SKIP_SYSTEM_DEPS" = true ]; then
+if [[ "$SKIP_SYSTEM_DEPS" == true ]]; then
     echo "Skipping system dependency installation (--no-system-deps flag set)."
 elif [ -t 0 ]; then
     read -p "Install system dependencies? [y/N] " -n 1 -r
