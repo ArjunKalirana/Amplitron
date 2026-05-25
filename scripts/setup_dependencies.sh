@@ -4,6 +4,11 @@
 
 set -e
 
+SKIP_SYSTEM_DEPS=false
+if [[ "$1" == "--no-system-deps" ]]; then
+    SKIP_SYSTEM_DEPS=true
+fi
+
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 EXTERNAL_DIR="$PROJECT_ROOT/external"
@@ -99,15 +104,16 @@ install_deps() {
     fi
 }
 
-if [ -t 0 ]; then
+if [ "$SKIP_SYSTEM_DEPS" = true ]; then
+    echo "Skipping system dependency installation (--no-system-deps flag set)."
+elif [ -t 0 ]; then
     read -p "Install system dependencies? [y/N] " -n 1 -r
     echo
+    if [[ ${REPLY:-N} =~ ^[Yy]$ ]]; then
+        install_deps
+    fi
 else
-    REPLY="N"
     echo "Non-interactive shell detected; skipping system dependency install prompt."
-fi
-if [[ ${REPLY:-N} =~ ^[Yy]$ ]]; then
-    install_deps
 fi
 
 echo ""
