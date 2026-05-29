@@ -72,12 +72,10 @@ fi
 echo ""
 echo "Checking system dependencies..."
 
-/**
- * install_deps - Detects the system package manager and installs required dependencies.
- * 
- * This function checks for apt-get, dnf, pacman, or brew to install build-essential, 
- * cmake, portaudio, and sdl2 libraries.
- */
+# install_deps - Detects the system package manager and installs required dependencies.
+#
+# This function checks for apt-get, dnf, pacman, or brew to install build-essential,
+# cmake, portaudio, and sdl2 libraries.
 install_deps() {
     if command -v apt-get &> /dev/null; then
         echo "Detected Debian/Ubuntu. Installing dependencies..."
